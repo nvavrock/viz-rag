@@ -7,12 +7,15 @@ from rag._runtime import ensure_project_venv
 ensure_project_venv("rag.retrieve")
 
 import argparse
+import sys
 
 from rag import answer as basic
 from rag import answer_advanced as advanced
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Fetch viz-rag context for a question")
     parser.add_argument("question", help="Question to search")
     parser.add_argument("--advanced", action="store_true", help="Query rewrite + rerank")

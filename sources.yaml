@@ -27,4 +27,4 @@ local:
   lessons: corpus/lessons/
   optional_projects:
     - ../tidytuesday/VIZ_LESSONS.md
-    - ../tidytuesday/2026_06_16_uk_baby_names/R/*.R
+    - ../tidytuesday/*/R/*.R

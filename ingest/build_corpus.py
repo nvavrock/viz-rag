@@ -169,18 +169,21 @@ def main() -> None:
                 counter,
             )
 
-        tt_r = ROOT.parent / "tidytuesday" / "2026_06_16_uk_baby_names" / "R"
-        if tt_r.is_dir():
-            for rfile in sorted(tt_r.glob("*.R")):
-                if rfile.name == "paths.R":
+        tt_root = ROOT.parent / "tidytuesday"
+        if tt_root.is_dir():
+            for week_r in sorted(tt_root.glob("*/R")):
+                if not week_r.is_dir():
                     continue
-                ingest_r_file(
-                    fh,
-                    rfile,
-                    "tidytuesday",
-                    {"language": "r", "role": "recipe", "package": "ggplot2"},
-                    counter,
-                )
+                for rfile in sorted(week_r.glob("*.R")):
+                    if rfile.name == "paths.R":
+                        continue
+                    ingest_r_file(
+                        fh,
+                        rfile,
+                        "tidytuesday",
+                        {"language": "r", "role": "recipe", "package": "ggplot2"},
+                        counter,
+                    )
 
     print(f"Wrote {counter[0]} chunks to {OUT}")
 
