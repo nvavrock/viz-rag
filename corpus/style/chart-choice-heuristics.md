@@ -24,6 +24,13 @@ Original decision notes aligned with [From Data to Viz](https://www.data-to-viz.
 - `facet_wrap` or `facet_grid` when the same chart type repeats per region, sex, or year.
 - Shared color for the same entity across facets when comparing patterns.
 
+## ggplot faceting gotchas
+
+- `facet_grid` / `facet_wrap` with a **categorical** axis (names, countries, products): by default ggplot shares all category levels across panels. Each panel may only plot top-N items, but the axis still lists every name from every panel — overlapping labels and sparse bars.
+- **Fix:** `scales = "free"` (or at least `free_y` for names and `free_x` for counts) when each panel has different categories or value ranges. England & Wales counts are ~6,000; Scotland/NI are ~400 — a shared count axis makes smaller regions invisible.
+- **Reorder per panel:** `group_by(region, Sex) |> mutate(Name = fct_reorder(Name, Number))` — not a global `reorder()` across the full dataset.
+- **Pattern:** top-N bar charts per region/sex -> `aes(x = Number, y = Name)` + `facet_grid(Sex ~ region, scales = "free")` (horizontal bars without `coord_flip()`).
+
 ## Rank data
 
 - Lower rank = more popular: consider `scale_y_reverse()` for rank on y.

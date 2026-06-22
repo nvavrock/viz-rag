@@ -5,6 +5,14 @@ sources/
 chunks/
 index/
 .embeddings/
+vector_db/
+preprocessed_db/
+
+# Secrets and local env
+.env
+
+# Python packaging artifacts
+viz_rag.egg-info/
 
 # R / editor
 .Rhistory

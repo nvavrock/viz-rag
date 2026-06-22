@@ -143,7 +143,11 @@ def main() -> None:
         else:
             print("Missing sources/ggplot2 — run scripts/fetch_sources.sh")
 
-        for sub, role in (("corpus/style", "style"), ("corpus/notes", "theory")):
+        for sub, role in (
+            ("corpus/style", "style"),
+            ("corpus/notes", "theory"),
+            ("corpus/lessons", "lesson"),
+        ):
             d = ROOT / sub
             if d.is_dir():
                 for md in sorted(d.glob("*.md")):
@@ -154,6 +158,16 @@ def main() -> None:
                         {"language": "en", "role": role, "package": "ggplot2"},
                         counter,
                     )
+
+        tt_lessons = ROOT.parent / "tidytuesday" / "VIZ_LESSONS.md"
+        if tt_lessons.is_file():
+            ingest_md(
+                fh,
+                tt_lessons,
+                "tidytuesday",
+                {"language": "en", "role": "lesson", "package": "ggplot2"},
+                counter,
+            )
 
         tt_r = ROOT.parent / "tidytuesday" / "2026_06_16_uk_baby_names" / "R"
         if tt_r.is_dir():

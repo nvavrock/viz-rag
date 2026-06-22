@@ -1,6 +1,8 @@
 # viz-rag
 
-Personal retrieval corpus for **ggplot2 / TidyTuesday** visualization work. Separate from [tidytuesday](../tidytuesday).
+Personal retrieval corpus and RAG assistant for **ggplot2 / TidyTuesday** visualization work. Separate from [tidytuesday](../tidytuesday).
+
+Built using patterns from [llm_engineering](https://github.com/ed-donner/llm_engineering) Week 5 (RAG): chunk → embed → retrieve → answer, with evaluation and advanced reranking.
 
 ## Strategy
 
@@ -10,41 +12,103 @@ Personal retrieval corpus for **ggplot2 / TidyTuesday** visualization work. Sepa
 | [ggplot2](https://github.com/tidyverse/ggplot2) | Git clone → chunk vignettes |
 | [VAD](https://www.cs.ubc.ca/~tmm/vadbook/) | Original summary notes in `corpus/notes/` (not book text) |
 | FT / Visual Capitalist | Original style heuristics in `corpus/style/` (not scraped) |
-| Your projects | Optional ingest from `../tidytuesday/.../R/*.R` |
+| TidyTuesday lessons | `../tidytuesday/VIZ_LESSONS.md` + week `R/*.R` plot recipes |
+| Corpus changelog | `corpus/lessons/CHANGELOG.md` — log of what was added and when |
 
-See [ATTRIBUTION.md](ATTRIBUTION.md) for licenses.
+See [ATTRIBUTION.md](ATTRIBUTION.md) for licenses. Lesson history: [corpus/lessons/CHANGELOG.md](corpus/lessons/CHANGELOG.md).
 
-## Quick start
+## Setup
+
+```bash
+# Python 3.11+
+python -m venv .venv
+
+# Windows — PowerShell often blocks `.ps1` scripts (ExecutionPolicy). Prefer:
+.venv\Scripts\python.exe -m pip install -e .
+# or:
+scripts\run.cmd -m pip install -e .
+copy .env.example .env
+
+# Optional if ExecutionPolicy allows .ps1:
+# .\scripts\run.ps1 -m pip install -e .
+
+# macOS/Linux
+# source .venv/bin/activate && pip install -e .
+```
+
+**Default:** local Ollama (`ollama run llama3.2`) + HuggingFace embeddings (free).  
+Optional: set `LLM_PROVIDER=openai` and `OPENAI_API_KEY` in `.env`.
+
+## Pipeline
 
 ### 1. Fetch upstream repos
 
 ```bash
-# Git Bash or WSL
 bash scripts/fetch_sources.sh
 ```
 
 ### 2. Build chunk file (JSONL)
 
-**Python** (no R required):
-
 ```bash
 python ingest/build_corpus.py
 ```
 
-**R** (RStudio):
+Output: `chunks/corpus.jsonl` — one JSON object per line with `text`, `source`, `role`, `package`.
 
-```r
-source("ingest/build_corpus.R")
-build_corpus()
+### 3. Embed into Chroma (local HuggingFace embeddings)
+
+```bash
+.venv\Scripts\python.exe -m rag.ingest
+# or: scripts\run.cmd -m rag.ingest
 ```
 
-Output: `chunks/corpus.jsonl` — one JSON object per line, ready for embedding.
+Uses `all-MiniLM-L6-v2` locally (no API key). Long sections are split with overlap automatically.
 
-### 3. Embed (your choice of tool)
+**Optional — LLM chunk preprocessing** (headline + summary per chunk, slow):
 
-Point your embedder at `chunks/corpus.jsonl` fields: `text`, `source`, `role`, `package`.
+```bash
+python -m rag.ingest --preprocess
+```
 
-Examples: OpenAI embeddings, `text-embeddings-inference`, Chroma, LanceDB, or Cursor MCP with a local index.
+Stores in `preprocessed_db/` instead of `vector_db/`.
+
+### 4. Chat (Gradio)
+
+```bash
+.venv\Scripts\python.exe -m rag.app
+# or: scripts\run.cmd -m rag.app
+```
+
+**Optional — advanced RAG** (query rewrite + reranking):
+
+```bash
+python -m rag.app --advanced
+python -m rag.app --advanced --preprocessed   # if you used --preprocess
+```
+
+### 5. Visualize embeddings (optional)
+
+```bash
+python -m rag.visualize
+python -m rag.visualize --3d
+python -m rag.visualize --preprocessed
+```
+
+### 6. Fetch context from the command line (optional)
+
+```bash
+python -m rag.retrieve "how do I use facet_wrap for small multiples?"
+python -m rag.retrieve "geom_line time series" --advanced
+```
+
+### 7. Evaluate retrieval and answers (optional)
+
+Requires Ollama or OpenAI for the LLM judge:
+
+```bash
+python -m evaluation.eval 0              # one test by index
+python -m evaluation.eval --all --limit 5   # summary over first N tests
+```
 
 ## Chunk schema
 
@@ -65,14 +129,28 @@ Examples: OpenAI embeddings, `text-embeddings-inference`, Chroma, LanceDB, or Cu
 
 ```
 viz-rag/
-├── corpus/style/     # FT-inspired + chart-choice notes (yours)
-├── corpus/notes/     # VAD-style framework summaries (yours)
-├── sources/          # cloned repos (gitignored)
-├── chunks/           # generated JSONL (gitignored)
-├── ingest/           # build_corpus.R
-└── scripts/          # fetch_sources.sh
+├── corpus/style/       # FT-inspired + chart-choice notes
+├── corpus/notes/       # VAD-style framework summaries
+├── corpus/lessons/     # changelog + dated lesson log
+├── sources/            # cloned repos (gitignored)
+├── chunks/             # generated JSONL (gitignored)
+├── vector_db/          # Chroma index (gitignored)
+├── preprocessed_db/    # optional LLM-preprocessed index (gitignored)
+├── ingest/             # build_corpus.py / .R
+├── rag/                # ingest, answer, app, visualize, preprocess
+├── evaluation/         # tests.jsonl + eval metrics
+└── scripts/            # fetch_sources.sh
 ```
+
+## Configuration (.env)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `LLM_PROVIDER` | `ollama` | `ollama` or `openai` for chat / rerank / eval |
+| `OLLAMA_MODEL` | `llama3.2` | Local chat model |
+| `OPENAI_MODEL` | `gpt-4.1-nano` | Used when `LLM_PROVIDER=openai` |
+| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Local HuggingFace embeddings |
 
 ## Cursor
 
-Use this repo as context when working on any R viz project. Wire an MCP retrieval tool later that searches `chunks/` or a vector index built from it.
+Use this repo as context when working on R viz projects. The Gradio app is for interactive Q&A; for Cursor, `@` mention files or wire an MCP tool against `fetch_context()` in `rag/answer.py`.
