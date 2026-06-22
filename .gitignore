@@ -1,0 +1,22 @@
+# Cloned upstream repos (fetch with scripts/fetch_sources.sh)
+sources/
+
+# Generated embeddings and chunk index
+chunks/
+index/
+.embeddings/
+
+# R / editor
+.Rhistory
+.RData
+.Rproj.user
+*.Rproj.user
+
+# Python (optional embed step)
+.venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

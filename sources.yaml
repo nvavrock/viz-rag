@@ -1,0 +1,28 @@
+# Corpus source manifest — edit paths after fetch_sources.sh
+
+data_to_viz:
+  repo: https://github.com/holtzy/data_to_viz.git
+  license: MIT
+  ingest:
+    - story/*.Rmd
+    - Example_dataset/Readme.md
+    - caveat/*.html
+  metadata:
+    language: r
+    role: chart_selection
+
+ggplot2:
+  repo: https://github.com/tidyverse/ggplot2.git
+  license: MIT
+  ingest:
+    - vignettes/*.qmd
+    - vignettes/*.Rmd
+  metadata:
+    language: r
+    role: implementation
+
+local:
+  style: corpus/style/
+  notes: corpus/notes/
+  optional_projects:
+    - ../tidytuesday/2026_06_16_uk_baby_names/R/*.R
