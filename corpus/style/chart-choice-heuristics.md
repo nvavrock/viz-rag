@@ -47,6 +47,14 @@ Original decision notes aligned with [From Data to Viz](https://www.data-to-viz.
 - Dual y-axis: avoid unless audience is expert; prefer two panels.
 - 3D: almost never for 2D data.
 
+## Social / static export (LinkedIn, slides)
+
+- Carousel: **one takeaway per slide**; static PNG — no plotly hover.
+- Faceted bars with `scales = "free"`: say in caption that scales differ across panels.
+- Boxplot + jitter: strong in HTML; often cramped on mobile PNG — consider dodged bars or faceting.
+- For ggplot charts that need plotly hover in PNG too: `webshot2` screenshot of `htmlwidgets` output (see `corpus/lessons/plotly-static-png-export.md`).
+- Full detail and interactivity: link to hosted HTML report, not more slides.
+
 ## Match data shape to folder names (data_to_viz)
 
 Example filenames like `7_OneCatOneNum.csv` mean one categorical + one numeric — start with bar, boxplot, or ordered dot plot.
